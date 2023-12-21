@@ -1,13 +1,13 @@
 import express, { Router } from 'express'
 import ServerlessHttp from 'serverless-http'
 
-const app = express()
+const api = express()
 const router = Router()
 
 router.get('/hello', (req, res) => {
     res.send('Hello World !!')
 })
 
-app.use('/api/', router)
+api.use('/api/', router)
 
-export const handler = ServerlessHttp(app)
+export const handler = ServerlessHttp(api)
