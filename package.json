@@ -3,20 +3,24 @@
     "@netlify/functions": "^2.4.1",
     "@types/express": "^4.17.21",
     "express": "^4.18.2",
+    "googleapis": "^129.0.0",
     "serverless-http": "^3.2.0"
   },
   "name": "babylogger",
   "description": "Log all the events for baby with NFC to collect dataset",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "build": "echo \"Building dependencies...\"",
     "open": "netlify open",
-    "serve": "netlify dev",
+    "serve": "netlify serve",
+    "dev": "netlify dev",
     "host": "netlify init"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "dotenv": "^16.3.1"
+  }
 }
