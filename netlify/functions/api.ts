@@ -29,32 +29,46 @@ const auth = new google.auth.GoogleAuth({
 
 const sheets = google.sheets({ version: 'v4', auth })
 
-router.post('/diaper/events', async (req, res) => { 
+/**
+ * Endpoint to register all feeding info
+ * @param {object} req request object containing payload as below
+ * {
+ *      date, 
+ *      time, 
+ *      feeding, 
+ *      quantity,
+ *      pee,
+ *      poop
+ * }
+ */
+router.post('/events/feeding', async (req, res) => { 
     try{
         const now = new Date()
         let payload  = JSON.parse(req.body)
 
         if(!payload?.time){
-            payload['time'] = now.toTimeString()
+            payload['time'] = now.toLocaleTimeString()
         }
 
         if(!payload?.date){
-            payload['date'] = now.toDateString()
+            payload['date'] = now.toLocaleDateString()
         }
 
         // Ensure final payload is in order
         let resourcePayload = {
             date: payload?.date, 
             time: payload?.time,
-            urination: payload?.urination,
-            defecation: payload?.defecation,
+            feeding: payload?.type || "Formula" , 
+            quantity: payload?.quantity || "Unknown",
+            pee: payload?.pee ?? 0,
+            poop: payload?.poop ?? 0 
         }
 
         const values = [Object.values(resourcePayload)]
         const request = {
             spreadsheetId: process.env.SHEET_ID,
-            range: 'Sheet1!A:D',
-            valueInputOption: 'RAW',
+            range: 'Sheet1!A:F',
+            valueInputOption: 'USER_ENTERED',
             resource: { values },
         }
 
@@ -71,94 +85,10 @@ router.post('/diaper/events', async (req, res) => {
     }
 })
 
-
-router.post('/sleep/events', async (req, res) => { 
-    try{
-        const now = new Date()
-        let payload  = JSON.parse(req.body)
-
-        if(!payload?.time){
-            payload['time'] = now.toTimeString()
-        }
-
-        if(!payload?.date){
-            payload['date'] = now.toDateString()
-        }
-
-        // Ensure final payload is in order
-        let resourcePayload = {
-            date: payload?.date, 
-            time: payload?.time,
-            sleepstart: payload?.sleepstart,
-            sleepend: payload?.sleepend,
-        }
-
-        const values = [Object.values(resourcePayload)]
-        const request = {
-            spreadsheetId: process.env.SHEET_ID,
-            range: 'Sheet2!A:D',
-            valueInputOption: 'RAW',
-            resource: { values },
-        }
-
-        const response = await sheets.spreadsheets.values.append(request) 
-        res.status(200).json({
-            message: "success",
-            response: response.data
-        })
-    }catch(e){
-        res.status(500).json({
-            message: "error",
-            response: null
-        })
-    }
-})
-
-
-router.post('/feed/events', async (req, res) => { 
-    try{
-        const now = new Date()
-        let payload  = JSON.parse(req.body)
-
-        if(!payload?.time){
-            payload['time'] = now.toTimeString()
-        }
-
-        if(!payload?.date){
-            payload['date'] = now.toDateString()
-        }
-
-        // Ensure final payload is in order
-        let resourcePayload = {
-            date: payload?.date, 
-            time: payload?.time,
-        }
-
-        const values = [Object.values(resourcePayload)]
-        const request = {
-            spreadsheetId: process.env.SHEET_ID,
-            range: 'Sheet3!A:B',
-            valueInputOption: 'RAW',
-            resource: { values },
-        }
-
-        const response = await sheets.spreadsheets.values.append(request) 
-        res.status(200).json({
-            message: "success",
-            response: response.data
-        })
-    }catch(e){
-        res.status(500).json({
-            message: "error",
-            response: null
-        })
-    }
-})
-
-router.get('/diaper/events', async (req, res)=>{
+router.get('/feedings', async (req, res)=>{
     const request = {
         spreadsheetId: process.env.SHEET_ID,
-        range: "Sheet1!A:D",
+        range: "Sheet1!A:F",
     }
     const response = await sheets.spreadsheets.values.get(request) 
     const values = response.data.values
@@ -167,41 +97,11 @@ router.get('/diaper/events', async (req, res)=>{
         values
     })
 })
-
-
-router.get('/sleep/events', async (req, res)=>{
-    const request = {
-        spreadsheetId: process.env.SHEET_ID,
-        range: "Sheet2!A:D",
-    }
-    const response = await sheets.spreadsheets.values.get(request) 
-    const values = response.data.values
-    res.status(200).json({
-        message: "success",
-        values
-    })
-})
-
-router.get('/feed/events', async (req, res)=>{
-    const request = {
-        spreadsheetId: process.env.SHEET_ID,
-        range: "Sheet3!A:B",
-    }
-    const response = await sheets.spreadsheets.values.get(request) 
-    const values = response.data.values
-    res.status(200).json({
-        message: "success",
-        values
-    })
-})
-
 
 router.get('/ping', (req, res)=> {
     res.status(200).json({
         status: "alive"
     })
 })
-
-
 
 export const handler = ServerlessHttp(api)
