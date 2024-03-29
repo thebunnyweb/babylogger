@@ -98,6 +98,48 @@ router.get('/feedings', async (req, res)=>{
     })
 })
 
+router.post('/events/simplefeed', async (req, res) => { 
+    try{
+        const now = new Date()
+        let payload  = JSON.parse(req.body)
+
+        if(!payload?.time){
+            payload['time'] = now.toLocaleTimeString()
+        }
+
+        if(!payload?.date){
+            payload['date'] = now.toLocaleDateString()
+        }
+
+        // Ensure final payload is in order
+        let resourcePayload = {
+            date: payload?.date, 
+            time: payload?.time,
+            quantity: payload?.quantity || "Unknown",
+            remarks: payload?.remarks || "" 
+        }
+
+        const values = [Object.values(resourcePayload)]
+        const request = {
+            spreadsheetId: process.env.SHEET_ID,
+            range: 'Sheet2!A:D',
+            valueInputOption: 'USER_ENTERED',
+            resource: { values },
+        }
+
+        const response = await sheets.spreadsheets.values.append(request) 
+        res.status(200).json({
+            message: "success",
+            response: response.data
+        })
+    }catch(e){
+        res.status(500).json({
+            message: "error",
+            response: null
+        })
+    }
+})
+
 router.get('/ping', (req, res)=> {
     res.status(200).json({
         status: "alive"
